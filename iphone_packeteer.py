@@ -18,7 +18,8 @@ class iPhonePacketeer:
       self.__username = username
     if password:
       self.__password = password
-    self.__html = ''
+    self.__html = None
+    self.__fee = None
 
   def __request(self):
     br = self.br
@@ -39,19 +40,22 @@ class iPhonePacketeer:
     self.__html = br.response().read().decode('cp932')
 
   def html(self):
-    if self.__html == '':
+    if self.__html == None:
       self.__request()
     return self.__html
 
   def fee(self):
-    if self.__html == '':
+    if self.__fee != None:
+      return self.__fee
+    if self.__html == None:
       self.__request()
     html = self.__html.split(u'>前月分')[0]
     fee_total = 0
     r = re.compile(u'通信料.+?([0-9,]+)円')
     for fee in r.findall(html):
       fee_total += int(re.sub(',', '', fee))
-    return fee_total
+    self.__fee = fee_total
+    return self.__fee
 
   def packets(self):
     fee = self.fee()
@@ -62,14 +66,14 @@ class iPhonePacketeer:
     return (fee / 0.08) * 128
 
   def ts_begin(self):
-    if self.__html == '':
+    if self.__html == None:
       self.__request()
     m = re.search(u'当月分.+?（([A-Za-z 0-9:]+)', self.__html)
     struct_time = time.strptime(m.group(1), "%a %b %d %H:%M:%S %Z %Y")
     return datetime.datetime(*struct_time[:6])
 
   def ts_end(self):
-    if self.__html == '':
+    if self.__html == None:
       self.__request()
     m = re.search(u'当月分.+?([A-Za-z 0-9:]+)）', self.__html)
     struct_time = time.strptime(m.group(1), "%a %b %d %H:%M:%S %Z %Y")
