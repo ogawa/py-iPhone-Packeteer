@@ -8,7 +8,7 @@ import re
 import time
 import datetime
 
-class iPhonePacketeer():
+class iPhonePacketeer:
   def __init__(self, username='', password=''):
     br = mechanize.Browser()
     br.set_handle_refresh(True)
@@ -46,11 +46,20 @@ class iPhonePacketeer():
   def fee(self):
     if self.__html == '':
       self.__request()
+    html = self.__html.split(u'>前月分')[0]
     fee_total = 0
     r = re.compile(u'通信料.+?([0-9,]+)円')
-    for fee in r.findall(self.__html):
+    for fee in r.findall(html):
       fee_total += int(re.sub(',', '', fee))
     return fee_total
+
+  def packets(self):
+    fee = self.fee()
+    return fee / 0.08
+
+  def bytes(self):
+    fee = self.fee()
+    return (fee / 0.08) * 128
 
   def ts_begin(self):
     if self.__html == '':
